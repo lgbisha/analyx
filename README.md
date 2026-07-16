@@ -4,7 +4,18 @@
 >
 > 上传数据，一键生成专业分析报告 —— 无需 SQL 或代码。
 
-**在线体验 / Live**: https://www.lgbisha.cn （右上角可切换中/英文，`?lang=en` for English）
+**在线体验 / Live**: **https://www.lgbisha.cn** （右上角可切换中/英文，`?lang=en` for English）
+
+![析数首页](docs/home.jpg)
+
+<p align="center">
+  <a href="https://infinisynapse.cn">
+    <img alt="Powered by InfiniSynapse" src="https://img.shields.io/badge/Powered%20by-InfiniSynapse-2f6fed">
+  </a>
+  <img alt="InfiniSynapse × CSDN" src="https://img.shields.io/badge/InfiniSynapse-%C3%97%20CSDN-12b76a">
+  <img alt="stack" src="https://img.shields.io/badge/stack-Fastify%20%2B%20React%20%2B%20Vite-6938ef">
+  <img alt="i18n" src="https://img.shields.io/badge/i18n-%E4%B8%AD%20%2F%20EN-f79009">
+</p>
 
 ---
 
@@ -21,6 +32,16 @@
 | 📈 投资持仓分析 | 上传持仓与交易流水，分析资产结构、收益归因与风险敞口 |
 
 每个场景均提供**数据模板下载**、**示例数据一键体验**与**示例报告预览**，无需注册即可跑通「上传 → 分析 → 图表 → 报告 → 分享」全流程。
+
+## 界面预览 / Screenshots
+
+| 分析场景页 | 专业分析报告 |
+|---|---|
+| ![场景页](docs/scenario.jpg) | ![报告](docs/report.jpg) |
+
+| 英文界面 (English UI) |
+|---|
+| ![English](docs/home_en.jpg) |
 
 ## 亮点
 
@@ -71,6 +92,21 @@ npm run dev               # Vite dev server，代理 /api 到后端
 
 - 前端构建为静态资源由 Fastify 托管；生产用 pm2 常驻，nginx 反代 + HTTPS。
 - 单进程支持全部三场景（`?scenario=` 区分），中英文由 `?lang=` 区分。
+
+---
+
+## 🚀 关于 InfiniSynapse × CSDN
+
+本作品由 **[InfiniSynapse](https://infinisynapse.cn) 泛数据分析引擎** 驱动，参加 **InfiniSynapse × CSDN 联合主办的「Vibe Coding 泛数据分析应用开发大赛」**。
+
+**InfiniSynapse** 让 AI 直接理解自然语言、连接各类数据源（数据库 / Excel / 文档），完成从数据查询、分析到洞察的全流程——**让不懂 SQL 和代码的人也能做专业的数据分析**。一个 API Key 即可通过 Server API 编程发起分析任务、管理数据源与知识库、获取图表与报告。
+
+- 🌐 官网 & 在线体验：https://infinisynapse.cn
+- 🔑 注册即送 500 积分并申请 API Key：https://app.infinisynapse.cn
+- 📖 Server API 文档：https://infinisynapse.cn/zh/docs/InfiniSynapse%20Server%20API%20Reference
+- 🏆 Vibe Coding 大赛：https://infinisynapse.cn/contest/vibe-coding
+
+> 想做自己的泛数据分析应用？注册 InfiniSynapse，用 Vibe Coding 的方式，几百行代码就能把 AI 数据分析能力接进你的产品。
 
 ---
 

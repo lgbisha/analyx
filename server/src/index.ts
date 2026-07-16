@@ -11,7 +11,7 @@ import { renderSharePage } from "./share.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 30080);
-const PUBLIC_BASE = process.env.PUBLIC_BASE || `http://124.221.76.211:${PORT}`;
+const PUBLIC_BASE = process.env.PUBLIC_BASE || `http://localhost:${PORT}`;
 
 export const shareCache = new Map<string, { report: Report; scenarioId: string; lang: Lang }>();
 
