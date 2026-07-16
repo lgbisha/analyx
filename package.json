@@ -1,0 +1,13 @@
+{
+  "name": "infini-analytics-app",
+  "private": true,
+  "version": "1.0.0",
+  "description": "InfiniSynapse Vibe Coding 大赛 - 泛数据分析应用（消费/健康/理财三垂直）",
+  "type": "module",
+  "scripts": {
+    "dev:server": "cd server && npm run dev",
+    "dev:web": "cd web && npm run dev",
+    "build:web": "cd web && npm run build",
+    "start": "cd server && npm start"
+  }
+}
