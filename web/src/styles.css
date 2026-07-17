@@ -91,7 +91,7 @@ body {
 .section-lead { text-align: center; color: var(--sub); font-size: clamp(16px, 2.4vw, 21px); margin: 0 0 50px; }
 
 /* Tiles (Apple product cards) */
-.tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
 .tile {
   background: #fff; border: none; border-radius: 22px; padding: 40px 30px; cursor: pointer;
   text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px;
@@ -198,6 +198,9 @@ table.spec tr:last-child td { border-bottom: none; }
   .th-bg, .th-aurora, .th-globe, .subhero-inner, .scroll-hint { animation: none !important; opacity: 1 !important; }
 }
 
+@media (max-width: 960px) {
+  .tiles { grid-template-columns: repeat(2, 1fr); }
+}
 @media (max-width: 720px) {
   .tiles, .features, .steps { grid-template-columns: 1fr; }
   .section { padding: 64px 0; }

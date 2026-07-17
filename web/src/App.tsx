@@ -68,6 +68,7 @@ const ICONS: Record<string, string> = {
   consumption: '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h13l-1 12H5L4 4z"/><path d="M4 4L3 2H1"/><circle cx="7" cy="20" r="1.4"/><circle cx="14" cy="20" r="1.4"/></svg>',
   health: '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l2-5 3 10 2-7 2 2h5"/></svg>',
   finance: '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>',
+  stock: '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17l5-5 4 3 6-8"/><path d="M15 7h5v5"/></svg>',
 };
 
 export function App() {

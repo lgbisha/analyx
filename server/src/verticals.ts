@@ -13,7 +13,7 @@ type Loc = {
   features: Feature[];
 };
 export type Vertical = {
-  id: "consumption" | "health" | "finance";
+  id: "consumption" | "health" | "finance" | "stock";
   brandColor: string;
   accentColor: string;
   sampleFile: string;
@@ -240,9 +240,88 @@ ${reportSpecZh}
 投资数据如下：
 ${data}`,
   },
+
+  stock: {
+    id: "stock",
+    brandColor: "#d92d20",
+    accentColor: "#f79009",
+    sampleFile: "stock_sample.csv",
+    zh: {
+      name: "股票走势分析",
+      tagline: "上传行情数据，生成专业的走势研判与量化策略参考报告",
+      intro:
+        "面向个人投资者的股票走势分析工具。上传日线行情数据（OHLCV）后，系统自动完成趋势研判、技术指标计算、支撑压力位识别与量化策略回测参考，输出专业的可视化研判报告。报告为数据层面的技术分析参考，不构成投资建议。",
+      personaTitle: "走势研判",
+      templateName: "股票行情数据模板.csv",
+      columns: [
+        { field: "日期", desc: "交易日", example: "2026-06-02" },
+        { field: "股票代码", desc: "标的代码", example: "600519" },
+        { field: "股票名称", desc: "标的名称", example: "贵州茅台" },
+        { field: "开盘价", desc: "当日开盘价", example: "1420.00" },
+        { field: "最高价", desc: "当日最高价", example: "1439.80" },
+        { field: "最低价", desc: "当日最低价", example: "1415.20" },
+        { field: "收盘价", desc: "当日收盘价", example: "1433.50" },
+        { field: "成交量", desc: "成交量（手）", example: "28650" },
+      ],
+      features: [
+        { title: "趋势研判", desc: "均线系统、趋势方向与支撑压力位" },
+        { title: "技术指标", desc: "MACD、RSI、波动率等指标计算与解读" },
+        { title: "量化策略参考", desc: "均线交叉等规则的历史回测表现" },
+      ],
+    },
+    en: {
+      name: "Stock Trend Analysis",
+      tagline: "Upload OHLCV data for a professional trend & quant-strategy report",
+      intro:
+        "A stock trend analysis tool for individual investors. Upload daily OHLCV data and the system performs trend assessment, technical indicators, support/resistance detection and rule-based backtest references, producing a professional visual report. Technical-analysis reference only, not investment advice.",
+      personaTitle: "Trend",
+      templateName: "stock_ohlcv_template.csv",
+      columns: [
+        { field: "date", desc: "Trading day", example: "2026-06-02" },
+        { field: "symbol", desc: "Ticker", example: "600519" },
+        { field: "name", desc: "Instrument name", example: "Kweichow Moutai" },
+        { field: "open", desc: "Open price", example: "1420.00" },
+        { field: "high", desc: "High price", example: "1439.80" },
+        { field: "low", desc: "Low price", example: "1415.20" },
+        { field: "close", desc: "Close price", example: "1433.50" },
+        { field: "volume", desc: "Volume", example: "28650" },
+      ],
+      features: [
+        { title: "Trend Assessment", desc: "Moving averages, trend direction, support/resistance" },
+        { title: "Technical Indicators", desc: "MACD, RSI, volatility computed and interpreted" },
+        { title: "Quant References", desc: "Backtest of rule-based strategies (e.g., MA cross)" },
+      ],
+    },
+    buildPrompt: (data, lang) =>
+      lang === "en"
+        ? `You are a professional quantitative and technical analyst. Analyze the daily OHLCV stock data (CSV) below rigorously and produce a professional trend-analysis report.
+First load and register the data as a table, then analyze:
+1) Trend: 5/10/20-day moving averages, trend direction and stage; recent support and resistance levels;
+2) Technical indicators: compute and interpret MACD, RSI(14) and rolling volatility; note overbought/oversold and divergence signals;
+3) Volume-price: volume trends and notable volume-price patterns;
+4) Quant strategy reference: backtest a simple MA(5/20) crossover rule on this data — trades, win rate, cumulative return vs buy-and-hold;
+5) Scenario outlook: based on the data, outline bullish/neutral/bearish conditions with key levels to watch (objective, data-driven).
+${reportSpecEn}
+IMPORTANT: include a prominent disclaimer that this is a data-driven technical reference only and NOT investment advice; markets are risky.
+
+Stock data:
+${data}`
+        : `你是一位专业的量化与技术分析师。请基于以下股票日线行情数据（CSV，OHLCV）进行严谨分析，输出一份专业的走势研判报告。
+请先将数据加载注册为数据表，再从以下维度分析：
+1) 趋势研判：计算 5/10/20 日均线，判断趋势方向与所处阶段；识别近期支撑位与压力位；
+2) 技术指标：计算并解读 MACD、RSI(14)、滚动波动率；提示超买超卖与背离信号；
+3) 量价关系：成交量趋势与显著的量价形态；
+4) 量化策略参考：在本数据上回测简单的 5/20 日均线交叉策略——交易次数、胜率、累计收益并与买入持有对比；
+5) 情景展望：基于数据给出偏多/中性/偏空三种情景的条件与关键点位（客观、数据驱动，不做主观荐股）。
+${reportSpecZh}
+重要：报告开头必须包含醒目的免责声明——本报告为数据驱动的技术分析参考，不构成任何投资建议，市场有风险，投资需谨慎。
+
+行情数据如下：
+${data}`,
+  },
 };
 
-export const SCENARIO_ORDER: Array<Vertical["id"]> = ["consumption", "health", "finance"];
+export const SCENARIO_ORDER: Array<Vertical["id"]> = ["consumption", "health", "finance", "stock"];
 
 export function getScenario(id: string): Vertical | undefined {
   return VERTICALS[(id || "").toLowerCase()];
@@ -274,6 +353,7 @@ export function exampleTaskId(id: string): string {
     consumption: process.env.EXAMPLE_CONSUMPTION,
     health: process.env.EXAMPLE_HEALTH,
     finance: process.env.EXAMPLE_FINANCE,
+    stock: process.env.EXAMPLE_STOCK,
   };
   return map[id] || "";
 }
