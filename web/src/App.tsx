@@ -5,10 +5,18 @@ import { Globe } from "./Globe";
 type Lang = "zh" | "en";
 type Field = { field: string; desc: string; example: string };
 type Feature = { title: string; desc: string };
+type FormField = { key: string; label: string; placeholder?: string; required?: boolean; type?: "text" | "textarea" };
+type QuickStart = { label: string; values: Record<string, string> };
 type Scenario = {
   id: string; name: string; tagline: string; intro: string;
   brandColor: string; accentColor: string;
+  mode?: "upload" | "form" | "dual_upload";
+  useWebSearch?: boolean;
   columns: Field[]; features: Feature[]; templateName: string; exampleTaskId: string;
+  formFields?: FormField[];
+  quickStarts?: QuickStart[];
+  cta?: string;
+  dualLabels?: string[];
 };
 type Platform = { name: string; subname: string; tagline: string; intro: string };
 type Chart = { name: string; svg: string };
@@ -27,40 +35,44 @@ const UI = {
   zh: {
     heroBadge: "InfiniSynapse × CSDN · 泛数据分析引擎驱动",
     start: "立即开始", about: "了解 InfiniSynapse ›",
-    chooseScenario: "选择分析场景", chooseLead: "上传你的数据，AI 自动生成专业分析报告",
+    chooseScenario: "选择分析场景", chooseLead: "表单提问或上传数据，AI 自动生成专业分析报告（支持联网）",
     enter: "进入分析 ›", back: "返回首页", scenarioBadge: "分析场景",
     howto: "使用流程",
-    step1: "准备数据", step1d: "下载模板按字段整理，或直接使用示例数据体验。",
-    step2: "上传文件", step2d: "支持 CSV、Excel，数据仅用于本次分析。",
-    step3: "获取报告", step3d: "自动生成专业可视化报告，支持分享与导出。",
+    step1: "选择场景并填写/上传", step1d: "表单场景直接填写；上传场景可用模板或示例数据。",
+    step2: "一键生成", step2d: "引擎自动分析，必要时联网检索公开信息。",
+    step3: "获取报告", step3d: "专业可视化报告，支持分享与导出。",
     dataFormat: "数据格式说明", field: "字段", desc: "说明", example: "示例",
     dlTemplate: "下载数据模板", dlSample: "下载示例数据", viewExample: "查看示例报告",
     upload: "上传数据，开始分析", trySample: "使用示例数据体验",
+    formTitle: "填写信息", quickStart: "快速试用",
     privacy: "🔒 数据仅用于本次分析，不作留存",
-    generating: "正在生成分析报告", generatingSub: "AI 正在自动完成建表、指标计算与图表生成，通常需要 1~4 分钟",
+    generating: "正在生成分析报告", generatingSub: "AI 正在分析，必要时联网检索公开信息，通常需要 1~4 分钟",
     failed: "分析未能完成", retry: "返回重试",
     copyLink: "复制分享链接", copied: "✓ 链接已复制", openShare: "打开分享页", dlPdf: "下载 PDF 报告", reanalyze: "重新分析",
     viz: "数据可视化",
     footer1: "分析能力由", footer2: "提供 · 自然语言驱动的泛数据分析平台",
+    dualHint: "请分别选择上期与本期两个文件（CSV/Excel）",
   },
   en: {
     heroBadge: "Powered by InfiniSynapse × CSDN",
     start: "Get Started", about: "About InfiniSynapse ›",
-    chooseScenario: "Choose a Scenario", chooseLead: "Upload your data, AI generates a professional report",
+    chooseScenario: "Choose a Scenario", chooseLead: "Form or upload — AI reports with optional web search",
     enter: "Analyze ›", back: "Home", scenarioBadge: "Scenario",
     howto: "How It Works",
-    step1: "Prepare Data", step1d: "Download the template, or try with sample data.",
-    step2: "Upload File", step2d: "CSV or Excel. Data is used only for this analysis.",
-    step3: "Get Report", step3d: "A professional visual report with sharing and export.",
+    step1: "Fill form or upload", step1d: "Forms need no file; uploads support templates/samples.",
+    step2: "Generate", step2d: "Engine analyzes; may use web search.",
+    step3: "Get report", step3d: "Professional visual report with share/export.",
     dataFormat: "Data Format", field: "Field", desc: "Description", example: "Example",
     dlTemplate: "Download Template", dlSample: "Download Sample", viewExample: "View Example Report",
-    upload: "Upload Data & Analyze", trySample: "Try Sample Data",
+    upload: "Upload Data & Analyze", trySample: "Try Sample",
+    formTitle: "Your inputs", quickStart: "Quick start",
     privacy: "🔒 Data is used only for this analysis and not stored",
-    generating: "Generating your report", generatingSub: "AI is building tables, computing metrics and generating charts — usually 1–4 minutes",
+    generating: "Generating your report", generatingSub: "AI is analyzing (web search when needed) — usually 1–4 minutes",
     failed: "Analysis failed", retry: "Back",
     copyLink: "Copy Share Link", copied: "✓ Copied", openShare: "Open Share Page", dlPdf: "Download PDF", reanalyze: "Analyze Again",
     viz: "Visualizations",
     footer1: "Analytics powered by", footer2: "· natural-language data analytics platform",
+    dualHint: "Select previous-period and current-period files (CSV/Excel)",
   },
 };
 
@@ -69,6 +81,15 @@ const ICONS: Record<string, string> = {
   health: '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l2-5 3 10 2-7 2 2h5"/></svg>',
   finance: '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>',
   stock: '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17l5-5 4 3 6-8"/><path d="M15 7h5v5"/></svg>',
+  offer_compare: '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="7" height="16" rx="1"/><rect x="14" y="4" width="7" height="16" rx="1"/><path d="M10 12h4"/></svg>',
+  city_cost: '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18"/><path d="M5 21V8l6-4 6 4v13"/><path d="M9 21v-6h6v6"/></svg>',
+  worth_it: '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 10h6M9 14h6"/></svg>',
+  store_diag: '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 10h16l-1 10H5L4 10z"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>',
+  content_audit: '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v14H4z"/><path d="M8 9h8M8 13h5"/></svg>',
+  weekly_compare: '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19V9M10 19v-6M16 19V5M22 19H2"/></svg>',
+  travel_cost: '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h18"/><path d="M5 12V7h4l2 3h8v2H5z"/><circle cx="8" cy="16" r="1.5"/><circle cx="16" cy="16" r="1.5"/></svg>',
+  restaurant: '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 3v8M6 3v5a2 2 0 004 0V3M16 3v18M14 3h4"/></svg>',
+  seasonal_food: '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21c4-3 7-6 7-10a7 7 0 10-14 0c0 4 3 7 7 10z"/><path d="M12 11v4"/></svg>',
 };
 
 export function App() {
@@ -84,14 +105,18 @@ export function App() {
   const [scId, setScId] = useState<string | null>(null);
   const [logs, setLogs] = useState<{ text: string; phase?: string }[]>([]);
   const [phaseIdx, setPhaseIdx] = useState(0);
+  const [statusText, setStatusText] = useState("正在连接分析引擎");
   const [report, setReport] = useState<Report | null>(null);
   const [err, setErr] = useState("");
   const [copied, setCopied] = useState(false);
+  const [formValues, setFormValues] = useState<Record<string, string>>({});
   const fileRef = useRef<HTMLInputElement>(null);
+  const file2Ref = useRef<HTMLInputElement>(null);
   const esRef = useRef<EventSource | null>(null);
   const logEndRef = useRef<HTMLDivElement>(null);
   const t = UI[lang];
   const sc = scenarios.find((s) => s.id === scId) || null;
+  const mode = sc?.mode || "upload";
 
   useEffect(() => {
     document.documentElement.lang = lang === "en" ? "en" : "zh-CN";
@@ -114,7 +139,9 @@ export function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lang]);
 
-  useEffect(() => { logEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [logs]);
+  useEffect(() => {
+    // no-op: keep logEndRef for potential future use
+  }, [statusText]);
 
   function applyTheme(s: Scenario) {
     document.documentElement.style.setProperty("--brand", s.brandColor);
@@ -129,6 +156,7 @@ export function App() {
     setScId(s.id);
     setView("scenario");
     applyTheme(s);
+    setFormValues(s.quickStarts?.[0]?.values || {});
     window.location.hash = s.id;
     window.scrollTo({ top: 0 });
   }
@@ -144,15 +172,27 @@ export function App() {
     window.scrollTo({ top: 0 });
   }
 
-  async function start(formData: FormData | null) {
+  async function start(formData: FormData | null, opts?: { useSample?: boolean; form?: Record<string, string> }) {
     if (!sc) return;
-    setView("running"); setLogs([]); setPhaseIdx(0); setReport(null); setErr("");
+    setView("running"); setLogs([]); setPhaseIdx(0); setStatusText("正在连接分析引擎"); setReport(null); setErr("");
     window.scrollTo({ top: 0, behavior: "smooth" });
     try {
-      const res = await fetch(`/api/analyze?scenario=${sc.id}&lang=${lang}`, {
-        method: "POST",
-        ...(formData ? { body: formData } : { headers: { "Content-Type": "application/json" }, body: "{}" }),
-      });
+      let res: Response;
+      if (formData) {
+        res = await fetch(`/api/analyze?scenario=${sc.id}&lang=${lang}`, { method: "POST", body: formData });
+      } else if (opts?.form) {
+        res = await fetch(`/api/analyze?scenario=${sc.id}&lang=${lang}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ form: opts.form }),
+        });
+      } else {
+        res = await fetch(`/api/analyze?scenario=${sc.id}&lang=${lang}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ useSample: true }),
+        });
+      }
       const data = await res.json();
       if (!res.ok || !data.jobId) throw new Error(data.error || "failed");
       listen(data.jobId);
@@ -166,9 +206,12 @@ export function App() {
     es.onmessage = (ev) => {
       let m: any; try { m = JSON.parse(ev.data); } catch { return; }
       if (m.kind === "status") {
-        if (m.text) setLogs((L) => [...L.slice(-60), { text: m.text, phase: m.phase }]);
-        if (m.phase) { const idx = PHASES.findIndex((p) => p.key === m.phase); if (idx >= 0) setPhaseIdx((c) => Math.max(c, idx)); }
-      } else if (m.kind === "done") { setReport(m.report); setPhaseIdx(PHASES.length); setView("done"); es.close(); }
+        if (m.text) setStatusText(m.text);
+        if (m.phase) {
+          const idx = PHASES.findIndex((p) => p.key === m.phase);
+          if (idx >= 0) setPhaseIdx((c) => Math.max(c, idx));
+        }
+      } else if (m.kind === "done") { setReport(m.report); setPhaseIdx(PHASES.length); setStatusText("分析完成"); setView("done"); es.close(); }
       else if (m.kind === "error") { setErr(m.text || "failed"); setView("error"); es.close(); }
     };
     es.onerror = () => setView((v) => (v === "running" ? "error" : v));
@@ -179,6 +222,32 @@ export function App() {
     if (!f) return;
     const fd = new FormData();
     fd.append("file", f);
+    start(fd);
+  }
+
+  function submitForm() {
+    if (!sc?.formFields) return;
+    for (const f of sc.formFields) {
+      if (f.required && !String(formValues[f.key] || "").trim()) {
+        setErr(`${f.label} 为必填`);
+        setView("error");
+        return;
+      }
+    }
+    start(null, { form: formValues });
+  }
+
+  function submitDual() {
+    const f1 = fileRef.current?.files?.[0];
+    const f2 = file2Ref.current?.files?.[0];
+    if (!f1 || !f2) {
+      setErr(t.dualHint);
+      setView("error");
+      return;
+    }
+    const fd = new FormData();
+    fd.append("file", f1);
+    fd.append("file2", f2);
     start(fd);
   }
 
@@ -281,31 +350,102 @@ export function App() {
               </div>
             </section>
 
-            <section className="block">
-              <h2 className="block-h">{t.dataFormat}</h2>
-              <div className="table-wrap">
-                <table className="spec">
-                  <thead><tr><th>{t.field}</th><th>{t.desc}</th><th>{t.example}</th></tr></thead>
-                  <tbody>
-                    {sc.columns.map((c, i) => (
-                      <tr key={i}><td className="mono">{c.field}</td><td>{c.desc}</td><td className="mono muted">{c.example}</td></tr>
+            {mode === "form" && sc.formFields && (
+              <section className="block">
+                <h2 className="block-h">{t.formTitle}</h2>
+                {!!sc.quickStarts?.length && (
+                  <div className="quick-row">
+                    <span className="quick-label">{t.quickStart}</span>
+                    {sc.quickStarts.map((q) => (
+                      <button key={q.label} type="button" className="chip" onClick={() => setFormValues({ ...q.values })}>{q.label}</button>
                     ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="dl-row">
-                <a className="link-btn" href={`/api/template?scenario=${sc.id}&lang=${lang}`}>{t.dlTemplate}</a>
-                <a className="link-btn" href={`/api/sample?scenario=${sc.id}&lang=${lang}`}>{t.dlSample}</a>
-                {sc.exampleTaskId && <a className="link-btn" href={`${publicBase}/s/${sc.exampleTaskId}`} target="_blank" rel="noreferrer">{t.viewExample}</a>}
-              </div>
-            </section>
+                  </div>
+                )}
+                <div className="form-grid">
+                  {sc.formFields.map((f) => (
+                    <label key={f.key} className={`form-field ${f.type === "textarea" ? "full" : ""}`}>
+                      <span>{f.label}{f.required ? " *" : ""}</span>
+                      {f.type === "textarea" ? (
+                        <textarea
+                          value={formValues[f.key] || ""}
+                          placeholder={f.placeholder}
+                          rows={4}
+                          onChange={(e) => setFormValues((v) => ({ ...v, [f.key]: e.target.value }))}
+                        />
+                      ) : (
+                        <input
+                          value={formValues[f.key] || ""}
+                          placeholder={f.placeholder}
+                          onChange={(e) => setFormValues((v) => ({ ...v, [f.key]: e.target.value }))}
+                        />
+                      )}
+                    </label>
+                  ))}
+                </div>
+                <div className="cta-block" style={{ border: "none", paddingTop: 20 }}>
+                  <button className="btn-pill lg" onClick={submitForm}>{sc.cta || t.upload}</button>
+                  {!!sc.quickStarts?.length && (
+                    <button className="btn-outline lg" onClick={() => start(null, { form: sc.quickStarts![0].values })}>{t.trySample}</button>
+                  )}
+                  <p className="privacy">{t.privacy}</p>
+                </div>
+              </section>
+            )}
 
-            <section className="block cta-block">
-              <button className="btn-pill lg" onClick={() => fileRef.current?.click()}>{t.upload}</button>
-              <button className="btn-outline lg" onClick={() => start(null)}>{t.trySample}</button>
-              <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls" hidden onChange={onPickFile} />
-              <p className="privacy">{t.privacy}</p>
-            </section>
+            {mode === "dual_upload" && (
+              <section className="block">
+                <h2 className="block-h">{t.upload}</h2>
+                <p className="sub">{t.dualHint}</p>
+                <div className="dual-row">
+                  <label className="file-card">
+                    <b>{sc.dualLabels?.[0] || "上期"}</b>
+                    <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls" />
+                  </label>
+                  <label className="file-card">
+                    <b>{sc.dualLabels?.[1] || "本期"}</b>
+                    <input ref={file2Ref} type="file" accept=".csv,.xlsx,.xls" />
+                  </label>
+                </div>
+                <div className="dl-row" style={{ marginTop: 16 }}>
+                  {sc.templateName && <a className="link-btn" href={`/api/template?scenario=${sc.id}&lang=${lang}`}>{t.dlTemplate}</a>}
+                  <a className="link-btn" href="#" onClick={(e) => { e.preventDefault(); start(null, { useSample: true }); }}>{t.trySample}</a>
+                  {sc.exampleTaskId && <a className="link-btn" href={`${publicBase}/s/${sc.exampleTaskId}`} target="_blank" rel="noreferrer">{t.viewExample}</a>}
+                </div>
+                <div className="cta-block" style={{ border: "none", paddingTop: 20 }}>
+                  <button className="btn-pill lg" onClick={submitDual}>{sc.cta || t.upload}</button>
+                  <p className="privacy">{t.privacy}</p>
+                </div>
+              </section>
+            )}
+
+            {mode === "upload" && (
+              <>
+                <section className="block">
+                  <h2 className="block-h">{t.dataFormat}</h2>
+                  <div className="table-wrap">
+                    <table className="spec">
+                      <thead><tr><th>{t.field}</th><th>{t.desc}</th><th>{t.example}</th></tr></thead>
+                      <tbody>
+                        {sc.columns.map((c, i) => (
+                          <tr key={i}><td className="mono">{c.field}</td><td>{c.desc}</td><td className="mono muted">{c.example}</td></tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="dl-row">
+                    <a className="link-btn" href={`/api/template?scenario=${sc.id}&lang=${lang}`}>{t.dlTemplate}</a>
+                    <a className="link-btn" href={`/api/sample?scenario=${sc.id}&lang=${lang}`}>{t.dlSample}</a>
+                    {sc.exampleTaskId && <a className="link-btn" href={`${publicBase}/s/${sc.exampleTaskId}`} target="_blank" rel="noreferrer">{t.viewExample}</a>}
+                  </div>
+                </section>
+                <section className="block cta-block">
+                  <button className="btn-pill lg" onClick={() => fileRef.current?.click()}>{t.upload}</button>
+                  <button className="btn-outline lg" onClick={() => start(null, { useSample: true })}>{t.trySample}</button>
+                  <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls" hidden onChange={onPickFile} />
+                  <p className="privacy">{t.privacy}</p>
+                </section>
+              </>
+            )}
           </div>
         </>
       )}
@@ -323,11 +463,10 @@ export function App() {
                 </div>
               ))}
             </div>
-            <div className="console">
-              {logs.map((l, i) => (
-                <div key={i} className="cline"><span className="cph">{phaseLabel(l.phase)}</span><span className="ctext">{l.text}</span></div>
-              ))}
-              <div ref={logEndRef} />
+            <div className="status-card">
+              <div className="status-spinner" />
+              <div className="status-text">{statusText}</div>
+              <div className="status-hint">系统正在处理中，请稍候，通常需要 1～4 分钟</div>
             </div>
           </section>
         </div>

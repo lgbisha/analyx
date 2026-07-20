@@ -89,7 +89,7 @@ export async function ping(): Promise<boolean> {
   }
 }
 
-export async function newTask(text: string, connId: string, taskId?: string): Promise<any> {
+export async function newTask(text: string, connId: string, taskId?: string, useWebSearch = true): Promise<any> {
   return api("/ai/message", {
     method: "POST",
     body: JSON.stringify({
@@ -98,6 +98,12 @@ export async function newTask(text: string, connId: string, taskId?: string): Pr
       connId,
       ...(taskId ? { taskId } : {}),
       chatSettings: { mode: "act" },
+      // 尽量开启联网（以平台账号能力为准）
+      autoApprovalSettings: {
+        enableWebSearch: !!useWebSearch,
+        enableNotifications: true,
+        enableReadImage: true,
+      },
     }),
   });
 }

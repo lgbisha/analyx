@@ -57,28 +57,37 @@ function emit(job: Job, m: Omit<StatusMsg, "seq">) {
 
 const basename = (p: string) => p.split("/").pop() || p;
 
-// 从 SSE 事件里提炼专业进度（含阶段标签）
-function friendly(ev: any): { text: string; phase: Phase } | null {
+// 固定中文专业话术（不透传模型原始思考，避免截断/英文碎片/重复刷屏）
+const PHASE_COPY: Record<Phase, string> = {
+  connect: "正在连接分析引擎",
+  ingest: "正在解析并加载数据",
+  compute: "正在计算指标并分析数据",
+  chart: "正在生成可视化图表",
+  report: "正在汇总专业分析报告",
+};
+
+// 仅根据上游事件推断阶段，不向前端转发原始文本
+function detectPhaseFromEvent(ev: any): Phase | null {
   const m = ev?.data?.message;
   if (!m || typeof m !== "object") return null;
   const say = m.say;
   const text = typeof m.text === "string" ? m.text : "";
-  const detectPhase = (s: string): Phase => {
-    if (/加载|注册|建表|导入|读取|load|table|视图|view/i.test(s)) return "ingest";
-    if (/图|chart|svg|绘制|可视化/i.test(s)) return "chart";
-    if (/select|统计|计算|查询|聚合|均值|标准差|占比|sql/i.test(s)) return "compute";
-    if (/报告|汇总|总结|summary|report/i.test(s)) return "report";
-    return "compute";
-  };
-  if (say === "reasoning" && text) return { text: text.slice(-70).replace(/\s+/g, " "), phase: detectPhase(text) };
-  if (say === "text" && text) return { text: text.slice(0, 90).replace(/\s+/g, " "), phase: "report" };
-  if (say === "command" && text) return { text: "执行数据处理指令", phase: detectPhase(text) };
-  if (say === "tool" && text) return { text: "处理数据中", phase: detectPhase(text) };
-  if (say === "api_req_started") return { text: "已连接分析引擎", phase: "connect" };
+  if (say === "api_req_started") return "connect";
+  if (say === "completion_result" || m.ask === "completion_result") return "report";
+  if (/加载|注册|建表|导入|读取|load|table|视图|view|json/i.test(text)) return "ingest";
+  if (/图|chart|svg|绘制|可视化|饼图|柱状|折线/i.test(text)) return "chart";
+  if (/报告|汇总|总结|summary|report|markdown|md/i.test(text)) return "report";
+  if (/select|统计|计算|查询|聚合|均值|标准差|占比|sql|macd|rsi|指标/i.test(text)) return "compute";
+  if (say === "command" || say === "tool" || say === "reasoning") return "compute";
   return null;
 }
 
-export function startAnalysis(prompt: string): Job {
+const PHASE_ORDER: Phase[] = ["connect", "ingest", "compute", "chart", "report"];
+function phaseIndex(p: Phase) {
+  return PHASE_ORDER.indexOf(p);
+}
+
+export function startAnalysis(prompt: string, useWebSearch = true): Job {
   const id = uuid();
   const connId = uuid();
   // 客户端预生成唯一 taskId，避免并发时服务端按时间戳生成导致撞车
@@ -95,10 +104,10 @@ export function startAnalysis(prompt: string): Job {
   jobs.set(id, job);
 
   let completionSeen = false;
-  let lastStatusAt = 0;
   let finalText = "";
   let completionText = "";
   let userEchoSkipped = false;
+  let currentPhase: Phase = "connect";
 
   const ctrl = openEvents(
     connId,
@@ -110,7 +119,7 @@ export function startAnalysis(prompt: string): Job {
       if (m && typeof m === "object") {
         const say = m.say;
         const ask = m.ask;
-        // 最终报告文本
+        // 最终报告文本（仅内部收集，不向前端流式展示）
         if (say === "text" && m.partial === false && typeof m.text === "string") {
           if (!userEchoSkipped) {
             userEchoSkipped = true; // 第一条 say:text 是用户输入回显，跳过
@@ -118,7 +127,7 @@ export function startAnalysis(prompt: string): Job {
             finalText = m.text;
           }
         }
-        if ((say === "completion_result" || ask === "completion_result")) {
+        if (say === "completion_result" || ask === "completion_result") {
           completionSeen = true;
           if (typeof m.text === "string" && m.text.length > completionText.length) {
             completionText = m.text;
@@ -126,12 +135,11 @@ export function startAnalysis(prompt: string): Job {
         }
       }
 
-      // 节流转发进度
-      const now = Date.now();
-      const line = friendly(ev);
-      if (line && now - lastStatusAt > 700) {
-        lastStatusAt = now;
-        emit(job, { kind: "status", text: line.text, phase: line.phase });
+      // 仅在阶段前进时推送一次固定中文话术，避免重复刷屏与字符截断
+      const next = detectPhaseFromEvent(ev);
+      if (next && phaseIndex(next) > phaseIndex(currentPhase)) {
+        currentPhase = next;
+        emit(job, { kind: "status", text: PHASE_COPY[next], phase: next });
       }
     },
     (err) => {
@@ -142,12 +150,17 @@ export function startAnalysis(prompt: string): Job {
   (async () => {
     try {
       await new Promise((r) => setTimeout(r, 1500)); // 等 SSE 就绪
-      emit(job, { kind: "status", text: "已提交分析任务", phase: "connect" });
-      const res = await newTask(prompt, connId, taskId);
+      emit(job, { kind: "status", text: PHASE_COPY.connect, phase: "connect" });
+      const res = await newTask(prompt, connId, taskId, useWebSearch);
       if (!res?.data?.success && res?.success !== true) {
         // newTask 直接失败
         const errMsg = res?.data?.error || res?.error || res?.message || "任务创建失败";
         throw new Error(String(errMsg));
+      }
+      // 任务已提交，进入数据加载阶段
+      if (phaseIndex(currentPhase) < phaseIndex("ingest")) {
+        currentPhase = "ingest";
+        emit(job, { kind: "status", text: PHASE_COPY.ingest, phase: "ingest" });
       }
 
       // 轮询完成状态
@@ -166,7 +179,8 @@ export function startAnalysis(prompt: string): Job {
 
       if (!job.taskId) throw new Error("未获取到任务 ID");
 
-      emit(job, { kind: "status", text: "正在整理图表与报告", phase: "report" });
+      currentPhase = "report";
+      emit(job, { kind: "status", text: PHASE_COPY.report, phase: "report" });
       const report = await collectArtifacts(job.taskId, completionText || finalText);
       job.report = report;
       job.status = "done";
