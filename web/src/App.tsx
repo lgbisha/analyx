@@ -90,6 +90,7 @@ const ICONS: Record<string, string> = {
   travel_cost: '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h18"/><path d="M5 12V7h4l2 3h8v2H5z"/><circle cx="8" cy="16" r="1.5"/><circle cx="16" cy="16" r="1.5"/></svg>',
   restaurant: '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 3v8M6 3v5a2 2 0 004 0V3M16 3v18M14 3h4"/></svg>',
   seasonal_food: '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21c4-3 7-6 7-10a7 7 0 10-14 0c0 4 3 7 7 10z"/><path d="M12 11v4"/></svg>',
+  workout: '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 7v10M18 7v10M3 9v6M21 9v6M6 12h12"/></svg>',
 };
 
 export function App() {

@@ -1003,12 +1003,97 @@ ${reportSpecZh}`,
         ? `Seasonal nutrition cooking assistant.\n${formBlock(data, lang)}\n${webEn}\nList seasonal vegetables, simple recipes, approx calories/vitamins, and a full-day 3-meal menu. Disclaimer: not medical advice.\n${reportSpecEn}`
         : `你是应季饮食与家常菜分析师。\n${formBlock(data, lang)}\n${webZh}\n请结合当季公开蔬果信息输出：1) 当月/当季推荐蔬菜清单 2) 每样简要营养点（热量/维生素/纤维等，估算）3) 2-3 种家常烧法步骤 4) 按用户口味与目标给出一日三餐示例菜单（早午晚）与大概总热量 5) 采购与保存提示。开头免责：营养数据为估算，不构成医疗或营养治疗建议。\n${reportSpecZh}`,
   },
+  // —— 运动锻炼推荐（联网）——
+  workout: {
+    id: "workout",
+    brandColor: "#7c2d92",
+    accentColor: "#e879f9",
+    sampleFile: "",
+    mode: "form",
+    useWebSearch: true,
+    zh: {
+      name: "运动锻炼规划",
+      tagline: "按身体条件、伤病与工作时间，定制可坚持的锻炼计划",
+      intro:
+        "输入身高体重、运动基础、伤病情况与每周可用时间段，系统结合公开运动科学知识，评估 BMI 与强度区间，避开伤病风险动作，输出一周可执行的锻炼计划（动作/组次/时长/热量估算）与恢复建议。存在伤病或慢性疾病时请先咨询医生，本报告不构成医疗建议。",
+      personaTitle: "锻炼规划",
+      templateName: "",
+      columns: [],
+      features: [
+        { title: "身体评估", desc: "BMI 与强度区间估算" },
+        { title: "避开伤病", desc: "规避风险动作并给替代" },
+        { title: "时间适配", desc: "按工作日程排一周计划" },
+      ],
+      formFields: [
+        { key: "basic", label: "身高/体重/年龄/性别", placeholder: "例如：175cm，78kg，29岁，男", required: true },
+        { key: "goal", label: "锻炼目标", placeholder: "减脂 / 增肌 / 体态改善 / 恢复体能…", required: true },
+        { key: "injury", label: "伤病与不适", placeholder: "例如：腰椎间盘突出史、右膝半月板不适、无…", required: false, type: "textarea" },
+        { key: "schedule", label: "工作与可用时间", placeholder: "例如：995 工作制，周二四晚 21 点后 40 分钟，周末上午充裕", required: true, type: "textarea" },
+        { key: "base", label: "运动基础", placeholder: "久坐无基础 / 偶尔跑步 / 健身房1年…", required: false },
+        { key: "equipment", label: "场地与器械", placeholder: "居家无器械 / 有哑铃弹力带 / 健身房", required: false },
+      ],
+      quickStarts: [
+        {
+          label: "久坐上班族减脂",
+          values: {
+            basic: "175cm，78kg，29岁，男",
+            goal: "减脂并改善体态",
+            injury: "偶发腰部酸痛，无确诊伤病",
+            schedule: "朝九晚八，周二/四晚上21点后约40分钟，周六上午2小时",
+            base: "久坐，基础较弱，能慢跑3公里",
+            equipment: "居家有瑜伽垫和一对哑铃",
+          },
+        },
+        {
+          label: "膝伤后恢复",
+          values: {
+            basic: "168cm，60kg，33岁，女",
+            goal: "恢复体能，保护膝盖，轻度减脂",
+            injury: "右膝半月板损伤恢复期，避免深蹲跳跃",
+            schedule: "工作日午休30分钟，周日下午1小时",
+            base: "受伤前常游泳",
+            equipment: "小区健身角+泳池",
+          },
+        },
+      ],
+      cta: "生成锻炼计划",
+    },
+    en: {
+      name: "Workout Planner",
+      tagline: "Body stats + injuries + work schedule → sustainable plan",
+      intro:
+        "Enter body stats, injuries and weekly availability; get a one-week executable plan with intensity zones, injury-safe substitutions and recovery tips. Consult a doctor for medical conditions; not medical advice.",
+      personaTitle: "Workout",
+      templateName: "",
+      columns: [],
+      features: [
+        { title: "Assessment", desc: "BMI & intensity zones" },
+        { title: "Injury-safe", desc: "Risk moves avoided" },
+        { title: "Schedule fit", desc: "Plan around work hours" },
+      ],
+      formFields: [
+        { key: "basic", label: "Height/weight/age/sex", required: true },
+        { key: "goal", label: "Goal", required: true },
+        { key: "injury", label: "Injuries", required: false, type: "textarea" },
+        { key: "schedule", label: "Work & available time", required: true, type: "textarea" },
+        { key: "base", label: "Fitness base", required: false },
+        { key: "equipment", label: "Equipment", required: false },
+      ],
+      quickStarts: [],
+      cta: "Generate workout plan",
+    },
+    buildPrompt: (data, lang) =>
+      lang === "en"
+        ? `Certified-style fitness planning analyst.\n${formBlock(data, lang)}\n${webEn}\nWorkflow: 1) assess BMI, estimated HR zones, workload capacity from work schedule; 2) flag injury-risk movements and give safe substitutions; 3) produce a 7-day plan table (day, time slot, exercises, sets/reps or duration, RPE, est. calories); 4) warm-up/recovery/nutrition notes; 5) progression for 4 weeks. Start with disclaimer: not medical advice; consult a doctor for injuries.\n${reportSpecEn}`
+        : `你是专业的运动与体能规划分析师。\n${formBlock(data, lang)}\n${webZh}\n请按以下流程输出《个性化锻炼规划报告》：\n1) 身体评估：BMI、估算强度/心率区间、结合工作时间评估每周可承受训练量；\n2) 伤病规避：明确列出应避免的动作，并给出安全替代动作；\n3) 一周计划表（星期、时间段、动作、组数次数或时长、强度RPE、估算热量消耗），严格贴合用户可用时间；\n4) 热身、拉伸恢复与睡眠/饮食配合要点；\n5) 未来4周渐进方案与自测指标。\n开头必须免责：本报告不构成医疗建议，伤病或慢性疾病请先咨询医生；训练量为估算，量力而行。可生成计划表格与热量估算图。\n${reportSpecZh}`,
+  },
 };
 
 export const SCENARIO_ORDER: string[] = [
   "travel_cost",
   "restaurant",
   "seasonal_food",
+  "workout",
   "offer_compare",
   "city_cost",
   "worth_it",
