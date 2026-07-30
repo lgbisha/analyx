@@ -52,6 +52,14 @@ body {
 .lang-seg { display: inline-flex; align-items: center; gap: 2px; background: rgba(120,120,128,0.14); border: none; border-radius: 999px; padding: 3px; cursor: pointer; height: 30px; }
 .lang-seg span { display: flex; align-items: center; justify-content: center; min-width: 30px; height: 24px; padding: 0 8px; border-radius: 999px; font-size: 12.5px; font-weight: 600; color: var(--sub); transition: color 0.2s, background 0.2s, box-shadow 0.2s; letter-spacing: 0.2px; }
 .lang-seg span.on { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+/* Partner SSO 登录入口（Apple 风细描边胶囊；凭据未配置时前端整体不渲染） */
+.nav-login { display: inline-flex; align-items: center; height: 30px; padding: 0 14px; border: 1px solid var(--line); border-radius: 999px; color: var(--ink); font-size: 13px; font-weight: 500; text-decoration: none; white-space: nowrap; transition: border-color 0.2s, background 0.2s; }
+.nav-login:hover { border-color: var(--ink); background: rgba(0,0,0,0.03); }
+.nav-login-short { display: none; }
+.nav-auth { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.nav-user { max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 600; color: var(--ink); }
+.nav-logout { background: none; border: none; color: var(--sub); font-size: 12.5px; cursor: pointer; padding: 0; white-space: nowrap; }
+.nav-logout:hover { color: var(--ink); text-decoration: underline; }
 
 /* Full-bleed hero */
 .hero-fs {
@@ -226,6 +234,18 @@ table.spec tr:last-child td { border-bottom: none; }
 .foot { text-align: center; color: var(--sub); font-size: 13px; padding: 40px 22px; background: var(--gray); }
 .foot a { color: var(--link); text-decoration: none; }
 
+/* 注册引导（拉新，克制） */
+.signup-card { text-align: center; border: 1px solid var(--line); border-radius: 18px; padding: 30px 24px; margin: 12px 0 56px; background: #fff; }
+.signup-card p { margin: 0 auto 18px; max-width: 560px; color: var(--sub); font-size: 15px; line-height: 1.7; }
+.signup-pill { display: inline-block; border: 1px solid var(--blue); color: var(--blue); border-radius: 980px; padding: 10px 24px; font-size: 15px; font-weight: 500; text-decoration: none; transition: background 0.2s, color 0.2s; }
+.signup-pill:hover { background: var(--blue); color: #fff; }
+.err-signup { margin-top: 18px; font-size: 13.5px; }
+.err-signup a { color: var(--link); text-decoration: none; }
+.err-signup a:hover { text-decoration: underline; }
+.signup-line { text-align: center; margin: 8px 0 56px; padding: 13px 20px; border: 1px solid var(--line); border-radius: 14px; background: #fff; color: var(--sub); font-size: 14px; line-height: 1.7; }
+.signup-line a { color: var(--blue); text-decoration: none; font-weight: 500; white-space: nowrap; }
+.signup-line a:hover { text-decoration: underline; }
+
 @media (prefers-reduced-motion: reduce) {
   .th-badge, .hero-title, .hero-sub, .hero-tag, .hero-cta-row, .tile,
   .th-bg, .th-aurora, .th-globe, .subhero-inner, .scroll-hint { animation: none !important; opacity: 1 !important; }
@@ -243,4 +263,12 @@ table.spec tr:last-child td { border-bottom: none; }
   .stepper::before { display: none; }
   .stepper { flex-wrap: wrap; gap: 14px; }
   .pstep { flex: 0 0 28%; }
+}
+@media (max-width: 480px) {
+  /* 375px 等窄屏：登录文案缩短为「登录」/「Sign in」，昵称收窄防挤压 */
+  .nav-login { padding: 0 12px; }
+  .nav-login-full { display: none; }
+  .nav-login-short { display: inline; }
+  .nav-user { max-width: 64px; }
+  .nav-right { gap: 10px; }
 }

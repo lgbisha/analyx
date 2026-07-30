@@ -8,10 +8,20 @@ import * as XLSX from "xlsx";
 import { VERTICALS, SCENARIO_ORDER, PLATFORM, getScenario, locOf, exampleTaskId, type Vertical, type Lang } from "./verticals.js";
 import { startAnalysis, getJob, type Report } from "./jobs.js";
 import { renderSharePage } from "./share.js";
+import { registerAuth, getSessionUser } from "./auth.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 30080);
 const PUBLIC_BASE = process.env.PUBLIC_BASE || `http://localhost:${PORT}`;
+
+// 双域名（www.lgbisha.cn / xishu.lgbisha.cn）并行：对外链接一律按请求头构造，
+// nginx 已转发 X-Forwarded-Proto 与 Host；PUBLIC_BASE 仅作无 Host 时兜底。
+function baseOf(req: { headers: Record<string, string | string[] | undefined> }): string {
+  const host = String(req.headers["host"] || "").trim();
+  if (!host) return PUBLIC_BASE;
+  const proto = String(req.headers["x-forwarded-proto"] || "").split(",")[0].trim() || "http";
+  return `${proto}://${host}`;
+}
 
 export const shareCache = new Map<string, { report: Report; scenarioId: string; lang: Lang }>();
 
@@ -19,6 +29,9 @@ const app = Fastify({ logger: false, bodyLimit: 25 * 1024 * 1024 });
 await app.register(multipart, { limits: { fileSize: 20 * 1024 * 1024 } });
 
 const langOf = (q: any): Lang => ((q?.lang === "en" ? "en" : "zh") as Lang);
+
+// Partner SSO「使用 InfiniSynapse 登录」：returnUrl 经 baseOf 按请求 Host 动态构造（双域名各回各家）
+registerAuth(app, baseOf);
 
 function truncateData(text: string, maxRows = 300, maxChars = 18000): string {
   const lines = text.split(/\r?\n/).filter((l) => l.trim());
@@ -67,7 +80,7 @@ app.get("/api/platform", async (req) => {
   return {
     platform: PLATFORM[lang],
     lang,
-    publicBase: PUBLIC_BASE,
+    publicBase: baseOf(req),
     scenarios: SCENARIO_ORDER.map((id) => scenarioMeta(VERTICALS[id], lang)).filter(Boolean),
   };
 });
@@ -158,6 +171,13 @@ app.post("/api/analyze", async (req, reply) => {
   const job = startAnalysis(V.buildPrompt(dataText, lang), V.useWebSearch !== false);
   (job as any).scenarioId = V.id;
   (job as any).lang = lang;
+  // 用户级调用归因：已登录用户发起分析时记录 InfiniSynapse 用户标识（仅日志，不改变任何行为）
+  const ssoUser = getSessionUser(req);
+  if (ssoUser) {
+    console.log(
+      `[sso] analyze by uid=${ssoUser.uid} nick=${ssoUser.nick} scenario=${V.id} lang=${lang} job=${job.id} host=${String(req.headers.host || "")}`
+    );
+  }
   return { jobId: job.id, scenario: V.id };
 });
 
@@ -214,7 +234,7 @@ app.get("/api/report/:jobId", async (req, reply) => {
       scenarioId: (job as any).scenarioId || "consumption",
       lang: (job as any).lang || "zh",
     });
-    return { status: "done", report: job.report, shareUrl: `${PUBLIC_BASE}/s/${job.report.taskId}` };
+    return { status: "done", report: job.report, shareUrl: `${baseOf(req)}/s/${job.report.taskId}` };
   }
   return { status: job.status, error: job.error };
 });
@@ -228,7 +248,7 @@ app.get("/s/:taskId", async (req, reply) => {
   }
   const V = getScenario(scenarioId || "consumption") || VERTICALS.consumption;
   const lang: Lang = cached?.lang || langOf(req.query);
-  const html = await renderSharePage(taskId, V, lang, PUBLIC_BASE, cached?.report);
+  const html = await renderSharePage(taskId, V, lang, cached?.report);
   reply.type("text/html").send(html);
 });
 
